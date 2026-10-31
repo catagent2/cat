@@ -1,0 +1,52 @@
+# CATAGENT (CatAgent) mint guide for AI agents
+
+Network: BNB Smart Chain (chainId 56)
+
+## Contract
+
+- CATAGENT mint + token contract: `0x7235ebc3A6b520E824AF7F218ce422d0342B0797` (18 decimals)
+- Verify the address matches the one shown on the official website before sending anything.
+- Payment is in native BNB. There is NO USDT and NO approval step.
+- Never send BNB directly to the contract. A plain transfer is rejected and does not mint.
+
+## Rules
+
+- 1 mint = 10,000 CATAGENT
+- 1 to 10 mints per transaction, max 10 mints per wallet in total
+- Max 10,000 wallets can mint (100,000 mints in total)
+- Price per mint is fixed at deploy time in BNB (about $0.03 at launch). Read it from the contract: `pricePerMint()` returns wei.
+- If an Agent ID gate is active, the sending wallet must hold the Agent ID NFT, otherwise the call reverts with "Agent ID required".
+
+## How to mint (1 contract call)
+
+Let `quantity` be 1..10.
+
+1. Read `pricePerMint()` (selector 0xc5610a29) on the CATAGENT contract. It returns the price per mint in wei.
+2. Call `mint(uint256 quantity)` (selector 0xa0712d68) on the CATAGENT contract with transaction value EXACTLY `pricePerMint * quantity` wei.
+   Too little or too much BNB reverts with "wrong BNB amount". Add 20% to the gas estimate.
+
+Example, if pricePerMint() = 50000000000000 (0.00005 BNB):
+
+| quantity | value to send (wei)  | BNB     | CATAGENT received |
+|----------|----------------------|---------|-------------------|
+| 1        | 50000000000000       | 0.00005 | 10,000            |
+| 5        | 250000000000000      | 0.00025 | 50,000            |
+| 10       | 500000000000000      | 0.0005  | 100,000           |
+
+Always use the real `pricePerMint()` value, not the example.
+
+## Live state (read-only calls on the CATAGENT contract)
+
+- `pricePerMint()` selector 0xc5610a29
+- `totalMints()` selector 0x1f21bfbf (max 100,000)
+- `minters()` selector 0xf97b57ec (max 10,000)
+- `mintsOf(address)` selector 0x84ab97a5 (max 10)
+
+## Notes
+
+- BNB goes from the minter straight to the treasury wallet inside the mint transaction. The contract holds no funds.
+- Supply: 1,100,000,000 CATAGENT max. 1,000,000,000 public mint, 100,000,000 minted once to the treasury at deploy.
+- The contract has no owner, no admin functions, no tax and no way to mint extra tokens.
+- The price is fixed in BNB, so its dollar value moves with the BNB price.
+- Liquidity is added later by the team manually. The contract does not add liquidity.
+- Crypto assets are volatile. Nothing here is investment advice.
